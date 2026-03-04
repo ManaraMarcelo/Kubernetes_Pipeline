@@ -1,390 +1,238 @@
-# 🚀 Pipeline CI/CD com FastAPI, Docker, Jenkins e Kubernetes
+# 🚀 CI/CD Pipeline with FastAPI, Docker, Jenkins, and Kubernetes
 
-Este projeto tem como objetivo principal ensinar e aplicar na prática os conceitos de **Integração Contínua (CI)** e **Entrega Contínua (CD)**. Desenvolvemos uma esteira de automação completa para uma aplicação backend (FastAPI) e um frontend simples, realizando o deploy automatizado em um cluster Kubernetes local via Jenkins.
+The main objective of this project is to teach and apply **Continuous Integration (CI)** and **Continuous Delivery (CD)** concepts in a real-world scenario. We developed a complete automation pipeline for a backend application (FastAPI) and a simple frontend, performing automated deployment to a local Kubernetes cluster via Jenkins.
 
-Sempre que novas alterações são enviadas para o repositório Git, a pipeline é acionada automaticamente, construindo, testando (futuramente), publicando e implantando a nova versão da aplicação.
-
----
-
-## 📌 Índice
-1️⃣ [Visão Geral do Projeto](#1️⃣-visão-geral-do-projeto)  
-2️⃣ [Tecnologias Utilizadas](#2️⃣-tecnologias-utilizadas)  
-3️⃣ [Estrutura do Projeto](#3️⃣-estrutura-do-projeto)  
-4️⃣ [Fase 1: Preparação do Projeto](#4️⃣-fase-1-preparação-do-projeto)  
-5️⃣ [Fase 2: Conteinerização com Docker](#5️⃣-fase-2-conteinerização-com-docker)  
-6️⃣ [Fase 3: Arquivos de Deploy no Kubernetes](#6️⃣-fase-3-arquivos-de-deploy-no-kubernetes)  
-7️⃣ [Fase 4: Jenkins - Build e Push](#7️⃣-fase-4-jenkins---build-e-push)  
-8️⃣ [Fase 5: Jenkins - Deploy no Kubernetes](#8️⃣-fase-5-jenkins---deploy-no-kubernetes)  
-9️⃣ [Fase 6: Documentação](#9️⃣-fase-6-documentação)  
-🔟 [Desafios Extras](#🔟-desafios-extras)  
-1️⃣1️⃣ [Teste Final da Aplicação](#1️⃣1️⃣-teste-final-da-aplicação)  
-✅ [Conclusão](#✅-conclusão)  
+Whenever new changes are pushed to the Git repository, the pipeline is automatically triggered—building, testing (future implementation), publishing, and deploying the new version of the application.
 
 ---
 
-## 1️⃣ Visão Geral do Projeto
-Este projeto demonstra a construção de uma pipeline de CI/CD para uma aplicação web Fullstack (Backend FastAPI + Frontend Estático). A automação abrange desde o versionamento do código no GitHub até a implantação contínua em um ambiente Kubernetes local, utilizando Jenkins como orquestrador.
+### 💡 Project Overview
+
+**The Problem:** Manual software deployments are slow, error-prone, and inconsistent across environments. In modern software development, the gap between writing code and delivering it to a production-ready cluster can become a bottleneck without automation.
+
+**The Solution:** A robust, automated "Commit-to-Cloud" pipeline. Using Jenkins as an orchestrator, the system automatically detects code changes, builds immutable Docker containers, scans them for security vulnerabilities, and deploys them into a Kubernetes cluster, ensuring that the environment always reflects the latest stable version of the code.
+
+**Technical Challenges:**
+- **Local K8s Connectivity:** Configuring Jenkins (running as a service/container) to communicate securely with a local Kubernetes cluster (Rancher Desktop/WSL) using `kubeconfig` and proper permissions.
+- **Webhook Integration:** Bridging a local Jenkins instance with GitHub using `ngrok` to allow inbound Webhook events for automated triggers.
+- **Security Gates:** Integrating `Trivy` into the pipeline logic to conditionally notify or block deployments based on vulnerability severity (HIGH/CRITICAL).
 
 ---
 
-## 2️⃣ Tecnologias Utilizadas
-* **GitHub:** Versionamento de código e acionamento de pipeline via Webhooks.
-* **FastAPI:** Framework web em Python para o desenvolvimento do Backend.
-* **Python:** Linguagem de programação para o Backend.
-* **Docker:** Para conteinerização da aplicação (Backend e Frontend).
-* **Docker Hub:** Registro público de imagens Docker.
-* **Jenkins:** Ferramenta de automação de CI/CD.
-* **Kubernetes Local:** Rancher Desktop (ou Minikube/Kind) para orquestração de contêineres.
-* **`kubectl`:** Ferramenta de linha de comando para interagir com o Kubernetes.
-* **`trivy`:** Scanner de vulnerabilidades para imagens Docker (usado nos desafios extras).
-* **`ngrok`:** Para expor o Jenkins local à internet e permitir que o GitHub envie Webhooks.
+## 📌 Index
+1️⃣ [Project Overview](#1️⃣-project-overview)  
+2️⃣ [Technologies Used](#2️⃣-technologies-used)  
+3️⃣ [Project Structure](#3️⃣-project-structure)  
+4️⃣ [Phase 1: Project Preparation](#4️⃣-phase-1-project-preparation)  
+5️⃣ [Phase 2: Containerization with Docker](#5️⃣-phase-2-containerization-with-docker)  
+6️⃣ [Phase 3: Kubernetes Deployment Files](#6️⃣-phase-3-kubernetes-deployment-files)  
+7️⃣ [Phase 4: Jenkins - Build and Push](#7️⃣-phase-4-jenkins---build-and-push)  
+8️⃣ [Phase 5: Jenkins - Kubernetes Deployment](#8️⃣-phase-5-jenkins---kubernetes-deployment)  
+9️⃣ [Phase 6: Documentation](#9️⃣-phase-6-documentation)  
+🔟 [Extra Challenges](#🔟-extra-challenges)  
+1️⃣1️⃣ [Final Application Test](#1️⃣1️⃣-final-application-test)  
+✅ [Conclusion](#✅-conclusion)  
 
 ---
 
-## 3️⃣ Estrutura do Projeto
-O projeto está organizado da seguinte forma no repositório Git:
+## 1️⃣ Project Overview
+This project demonstrates the construction of a CI/CD pipeline for a Fullstack web application (FastAPI Backend + Static Frontend). The automation covers everything from code versioning on GitHub to continuous deployment in a local Kubernetes environment, using Jenkins as the orchestrator.
 
-projeto-pipeline/  
+---
+
+## 2️⃣ Technologies Used
+* **GitHub:** Code versioning and pipeline triggering via Webhooks.
+* **FastAPI:** Python web framework for Backend development.
+* **Python:** Backend programming language.
+* **Docker:** For containerizing the application (Backend and Frontend).
+* **Docker Hub:** Public Docker image registry.
+* **Jenkins:** CI/CD automation tool.
+* **Local Kubernetes:** Rancher Desktop (or Minikube/Kind) for container orchestration.
+* **`kubectl`:** Command-line tool for interacting with Kubernetes.
+* **`trivy`:** Vulnerability scanner for Docker images (used in extra challenges).
+* **`ngrok`:** To expose local Jenkins to the internet, allowing GitHub to send Webhooks.
+
+---
+
+## 3️⃣ Project Structure
+The project is organized as follows in the Git repository:
+
+```text
+project-pipeline/  
 ├── src/  
 │   ├── backend/  
 │   │   ├── main.py  
 │   │   ├── requirements.txt  
 │   │   └── Dockerfile  
-│   └── frontend/ # Contém arquivos HTML/CSS/JS (servidos pelo backend)  
+│   └── frontend/ # Contains HTML/CSS/JS files (served by the backend)  
 │       └── index.html  
 ├── k8s/  
-│   ├── backend-deployment.yaml # Renomeado para consistência  
-│   └── backend-service.yaml    # Renomeado para consistência  
+│   ├── backend-deployment.yaml 
+│   └── backend-service.yaml    
 └── Jenkinsfile  
 
----
-
-## 4️⃣ Fase 1: Preparação do Projeto
-Nesta fase, o ambiente de desenvolvimento e os repositórios são preparados.
-
-### 4.1. Repositório GitHub
-* Criação de um **novo repositório** no GitHub (e.g., `Projeto-Pipeline`).
-* Configuração de branches:
-    * `dev`: Branch principal de desenvolvimento. Todas as novas funcionalidades e testes iniciais são feitos aqui.
-    * `main` (ou `master`): Branch de produção. Recebe código apenas após validação completa na `dev`.
-* **Link do Repositório:** `https://github.com/ManaraMarcelo/Projeto-Pipeline.git`
-
-### 4.2. Conta no Docker Hub
-* Criação de conta no Docker Hub para armazenar as imagens da aplicação.
-* **Usuário Docker Hub:** `manaramarcelo`
-
-### 4.3. Acesso ao Cluster Kubernetes Local
-* Verificação do funcionamento do Rancher Desktop (ou alternativa) e do acesso ao cluster Kubernetes via `kubectl`.
-    ```bash
-    kubectl get nodes
-    ```
-
-### 4.4. Validação da Aplicação Local (Backend FastAPI)
-* Instalação de dependências Python (`fastapi`, `uvicorn`, `httpx`, `pydantic`) e execução local do `main.py`.
-    ```bash
-    cd <SEU_REPOSITORIO_LOCAL>/src/backend/
-    pip install -r requirements.txt
-    uvicorn main:app --host 0.0.0.0 --port 8000
-    ```
-* Acesso no navegador: `http://localhost:8000`.
-
-**Conteúdo de `src/backend/requirements.txt`: [requeriments.txt](https://github.com/ManaraMarcelo/Projeto-Pipeline/blob/main/src/requirements.txt)**
-
-**Conteúdo de `src/backend/main.py`: [main.py](https://github.com/ManaraMarcelo/Projeto-Pipeline/blob/main/src/main.py)**
-
-**Conteúdo de `src/frontend/index.html`: [index.html](https://github.com/ManaraMarcelo/Projeto-Pipeline/blob/main/src/frontend/index.html)**
-
-## 5️⃣ Fase 2: Conteinerização com Docker
-
-Nesta fase, o backend (FastAPI) é empacotado em uma imagem Docker e publicado. O frontend será empacotado junto ao backend nesta etapa.
-
-### 5.1. Criação do Dockerfile (Backend com Frontend Estático)
-
-No diretório `src/backend/`, crie o arquivo `Dockerfile`.
-
-Você pode visualizar o conteúdo completo do Dockerfile [Dockerfile](https://github.com/ManaraMarcelo/Projeto-Pipeline/blob/main/src/Dockerfile).
-
-### 5.2. Teste Local (Build e Execução)
-
-No diretório `src/backend/`, execute os comandos para construir a imagem e rodar o contêiner localmente.
-
-Acesse a aplicação via navegador em [http://localhost:8000](http://localhost:8000). Se funcionar, o contêiner está ok.
-
-### 5.3. Publicação no Docker Hub
-
-A imagem construída será publicada no Docker Hub através da pipeline Jenkins (Fase 4).
-
-### 5.4. Versionamento
-
-O Dockerfile e o código da aplicação são versionados no GitHub.
+```
 
 ---
 
-## 6️⃣ Fase 3: Arquivos de Deploy no Kubernetes
+## 4️⃣ Phase 1: Project Preparation
 
-Nesta fase, definimos como a aplicação será implantada no cluster Kubernetes local.
+In this phase, the development environment and repositories are prepared.
 
-### 6.1. Criação dos YAMLs de Deployment e Service
+### 4.1. GitHub Repository
 
-Crie a pasta `k8s/` na raiz do seu repositório para organizar os manifestos do Kubernetes.
+* Created a **new repository** on GitHub (e.g., `Project-Pipeline`).
+* Branch configuration:
+* `dev`: Main development branch. All new features and initial tests are done here.
+* `main` (or `master`): Production branch. Receives code only after complete validation in `dev`.
 
-Os arquivos criados são:
 
-- `k8s/backend-deployment.yaml`
-- `k8s/backend-service.yaml`
+* **Repository Link:** `https://github.com/ManaraMarcelo/Projeto-Pipeline.git`
 
-Você pode visualizar ambos os arquivos diretamente no GitHub:
+### 4.2. Docker Hub Account
 
-📁 [Ver arquivos de deploy no Kubernetes (pasta k8s/)](https://github.com/ManaraMarcelo/Projeto-Pipeline/tree/main/k8s)
+* Created an account on Docker Hub to store the application images.
+* **Docker Hub User:** `manaramarcelo`
 
-### 6.2. Aplicação Manual e Validação no Kubernetes
+### 4.3. Access to Local Kubernetes Cluster
 
-Para aplicar os manifestos, utilize os comandos `kubectl apply` apontando para os arquivos YAML.
+* Verified Rancher Desktop (or alternative) and Kubernetes cluster access via `kubectl`.
+```bash
+kubectl get nodes
 
-Após a aplicação, verifique o status dos pods e serviços com os comandos `kubectl get pods` e `kubectl get service`.
+```
 
-#### 🔥 Dica de Segurança: 
 
-Configure o **Firewall do Windows** para permitir tráfego na porta utilizada pelo `NodePort` (ex: 30001), garantindo o acesso à aplicação via `http://localhost:30001`.
+
+### 4.4. Local Application Validation (FastAPI Backend)
+
+* Installed Python dependencies (`fastapi`, `uvicorn`, `httpx`, `pydantic`) and executed `main.py` locally.
+```bash
+cd <LOCAL_REPO_PATH>/src/backend/
+pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port 8000
+
+```
+
+
+* Access in browser: `http://localhost:8000`.
 
 ---
 
-## 7️⃣ Fase 4: Jenkins - Build e Push
+## 5️⃣ Phase 2: Containerization with Docker
 
-Nesta fase, criamos a pipeline Jenkins para automatizar o build e o push da imagem Docker da aplicação.
+In this phase, the backend (FastAPI) is packaged into a Docker image. The frontend is bundled together with the backend in this stage.
 
-### 7.1. Criação da Nova Pipeline no Jenkins
+### 5.1. Dockerfile Creation (Backend with Static Frontend)
 
-1. Acesse o Jenkins via [http://localhost:8080](http://localhost:8080).
-2. Clique em **"Novo Item"**, nomeie como `fastapi-cicd-pipeline`, selecione **"Pipeline"** e clique em **"OK"**.
-3. Configure como:
-   - **Definition**: Pipeline script from SCM.
-   - **SCM**: Git.
-   - **URL do Repositório**: Insira a URL HTTPS do seu repositório GitHub.
-   - **Branches to build**: `*/dev`
-   - **Script Path**: `Jenkinsfile` (deve estar na raiz do repositório).
+In the `src/backend/` directory, create the `Dockerfile`.
+View the full content: [Dockerfile](https://github.com/ManaraMarcelo/Projeto-Pipeline/blob/main/src/Dockerfile).
+
+### 5.2. Local Test (Build and Execution)
+
+Run commands to build the image and run the container locally.
+Access the app at [http://localhost:8000](https://www.google.com/search?q=http://localhost:8000).
+
+---
+
+## 6️⃣ Phase 3: Kubernetes Deployment Files
+
+Defined how the application will be deployed in the local Kubernetes cluster.
+
+### 6.1. Deployment and Service YAMLs
+
+Created the `k8s/` folder to organize Kubernetes manifests.
+📁 [View Kubernetes deploy files (k8s/ folder)](https://github.com/ManaraMarcelo/Projeto-Pipeline/tree/main/k8s)
+
+---
+
+## 7️⃣ Phase 4: Jenkins - Build and Push
+
+Created the Jenkins pipeline to automate the Docker image build and push.
+
+### 7.1. New Jenkins Pipeline
+
+1. Access Jenkins at [http://localhost:8080](https://www.google.com/search?q=http://localhost:8080).
+2. Create a **"New Item"** > `fastapi-cicd-pipeline` > **"Pipeline"**.
+3. Configure **SCM**: Git, **Repo URL**, **Branch**: `*/dev`, **Script Path**: `Jenkinsfile`.
 
 🔗 [Jenkinsfile](https://github.com/ManaraMarcelo/Projeto-Pipeline/blob/main/Jenkinsfile)
 
-### 7.2. Jenkinsfile (Build e Push Stages)
+### 7.3. Webhook Automation (Git Push Trigger)
 
-O `Jenkinsfile` contém os estágios principais para:
+#### On Jenkins:
 
-- **Checkout do repositório**
-- **Build da imagem Docker**
-- **Push da imagem para o Docker Hub**
+* Enable **"GitHub hook trigger for GITScm polling"**.
 
-### 7.3. Automação com Webhook (Git Push Trigger)
+#### On GitHub:
 
-Para que a pipeline seja executada automaticamente a cada push na branch `dev`:
-
-#### No Jenkins:
-- Vá até o job `fastapi-cicd-pipeline`.
-- Clique em **"Configurar"** > "Acionadores de Build".
-- Marque a opção **"GitHub hook trigger for GITScm polling"**.
-
-#### No GitHub:
-1. Acesse **Settings** do seu repositório.
-2. Vá até **Webhooks** > **"Add webhook"**.
-3. Configure:
-   - **Payload URL**: `https://<SEU_URL_NGROK>/github-webhook/`
-   - **Content type**: `application/json`
-   - **Which events**: *Just the push event*
-4. Clique em **"Add webhook"**.
-
-⚠️ Certifique-se de que o **ngrok** esteja rodando com `ngrok http 8080`.
-
-#### Teste:
-Realize um `git push` para a branch `dev`. Acesse o Jenkins e verifique se a pipeline foi acionada automaticamente.
+1. Go to **Settings** > **Webhooks** > **"Add webhook"**.
+2. **Payload URL**: `https://<YOUR_NGROK_URL>/github-webhook/`
+3. **Content type**: `application/json`
 
 ---
 
-## 8️⃣ Fase 5: Jenkins - Deploy no Kubernetes
+## 8️⃣ Phase 5: Jenkins - Kubernetes Deployment
 
-Nesta fase, a pipeline Jenkins é estendida para realizar o deploy da aplicação diretamente no Kubernetes.
+The pipeline is extended to deploy the application directly to Kubernetes.
 
----
+### 8.1. Jenkins Access to `kubectl`
 
-### 8.1. Acesso do Jenkins ao `kubectl`
-
-Para que o Jenkins consiga aplicar manifestos no Kubernetes:
-
-- ✅ Certifique-se de que o `kubectl` está disponível no `PATH` do usuário Jenkins.
-- ✅ O arquivo `kubeconfig` do Rancher Desktop foi copiado para `/var/lib/jenkins/.kube/config` com as permissões corretas.
-- ✅ Crie uma credencial do tipo **"Texto Secreto"** no Jenkins com o conteúdo do `kubeconfig`.
-  - ID da credencial: `kubeconfig`
+* ✅ `kubectl` must be in the Jenkins user `PATH`.
+* ✅ `kubeconfig` from Rancher Desktop copied to `/var/lib/jenkins/.kube/config` with correct permissions.
+* ✅ Jenkins Credential (Secret Text) created with the `kubeconfig` content (ID: `kubeconfig`).
 
 ---
 
-### 8.2. Atualização do Jenkinsfile (Stage de Deploy)
+## 9️⃣ Phase 6: Documentation
 
-Um novo **stage de deploy** é adicionado ao `Jenkinsfile`, utilizando o `kubectl` para aplicar os manifestos Kubernetes.
-
-🔗 [Ver Jenkinsfile com Deploy no GitHub](https://github.com/ManaraMarcelo/Projeto-Pipeline/blob/main/Jenkinsfile)
-
-Esse novo estágio faz:
-- Substituição da **tag da imagem** no arquivo `backend-deployment.yaml`
-- Aplicação dos arquivos de `Deployment` e `Service`
-- Verificação do rollout do deployment (com timeout de 5 minutos)
-
-📁 [Ver arquivos YAML no GitHub](https://github.com/ManaraMarcelo/Projeto-Pipeline/tree/main/k8s)
+**Deliverables:** Complete `README.md` with all steps.
 
 ---
 
-### 8.3. Teste da Pipeline e Estratégia de Branches
+## 🔟 Extra Challenges
 
-#### ✅ Teste na Branch `dev`:
-- Faça um `git push` para a branch `dev`.
-- A pipeline será executada:
-  - Build da imagem
-  - Push para Docker Hub
-  - Deploy para o Kubernetes
+### 10.1. Vulnerability Scanning with Trivy
 
-#### 🚀 Deploy em Produção (`main`):
-Após validação na `dev`, realize o merge com a branch `main`:
+Installed Trivy and jq on the Jenkins agent. Added a "Vulnerability Scan" stage in the Jenkinsfile.
 
-```bash
-git checkout main
-git merge dev
-git push origin main
+### 10.2. Slack Notifications
+
+Implemented automated notifications to inform the team about build status and security scan results.
+
+---
+
+## 1️⃣1️⃣ Final Application Test
+
+Access the application in the browser via:
+
+`http://localhost:<NodePort_allocated_by_K8s>` (Example: [http://localhost:30001](https://www.google.com/search?q=http://localhost:30001))
+
+### Verifications:
+
+* ✅ Check **FastAPI** endpoints (`/color`, `/cat`, etc.).
+* ✅ Confirm **frontend** is being served correctly.
+* ✅ Check **Slack notifications**.
+
+---
+
+## ✅ Conclusion
+
+This project demonstrates a **robust and automated CI/CD pipeline** for containerized applications, covering everything from development to **Kubernetes** deployment while integrating essential **DevOps** tools.
+
+The automated workflow ensures:
+
+* 🔁 **Faster deliveries**
+* ✅ **Reliability**
+* 📈 **Higher quality**
+* 🛡️ **Minimized manual errors**
+
+---
+
+## 🔗 Contact
+
+📧 **Email:** [zmarcelo2018@gmail.com](mailto:zmarcelo2018@gmail.com)
+
+💡 *Suggestions and improvements are always welcome!*
+
 ```
-
-## 9️⃣ Fase 6: Documentação
-
-**Entregáveis:** `README.md` completo com todos os passos.
-
----
-
-### 9.1. Criação/Atualização do README.md
-
-Este próprio documento é um exemplo de `README.md` que você pode usar e adaptar.
-
----
-
-## 🔟 Desafios Extras
-
-Após ter a pipeline básica funcionando, você pode começar a integrar esses recursos para aprimorar seu projeto:
-
----
-
-### 10.1. Scan de Vulnerabilidades com Trivy
-
-**Instale Trivy e jq no seu WSL (agente Jenkins):**
-
-```bash
-sudo apt-get update
-sudo apt-get install -y trivy jq
-```
-
-Adicione um stage Scan de Vulnerabilidades no Jenkinsfile (após o Push Docker Image):
-
-```bash
-stage('Scan de Vulnerabilidades') {
-    steps {
-        script {
-            echo "🔍 Escaneando a imagem com Trivy (somente vulnerabilidades HIGH e CRITICAL)..."
-
-            env.CRITICAL_VULNERABILITIES_FOUND = "false"
-            env.TRIVY_REPORT = ""
-
-            try {
-                def trivyResult = sh(
-                    script: "trivy image --severity HIGH,CRITICAL --format json manaramarcelo/meuapp-backend:${env.BUILD_ID} | tee trivy-report.json || true",
-                    returnStdout: true,
-                    returnStatus: true
-                )
-
-                env.TRIVY_REPORT = trivyResult.stdout
-
-                if (trivyResult.status == 1) {
-                    env.CRITICAL_VULNERABILITIES_FOUND = "true"
-                    echo "⚠️ Trivy encontrou vulnerabilidades HIGH/CRITICAL. Verifique o log."
-                } else if (trivyResult.status == 0) {
-                    echo "✅ Nenhuma vulnerabilidade HIGH/CRITICAL encontrada pelo Trivy."
-                } else {
-                    echo "❌ Erro inesperado na execução do Trivy (código: ${trivyResult.status}). Analise o log."
-                    env.CRITICAL_VULNERABILITIES_FOUND = "error"
-                }
-            } catch (err) {
-                echo "❌ Erro CRÍTICO ao executar o Trivy/jq: ${err}"
-                env.CRITICAL_VULNERABILITIES_FOUND = "error"
-            }
-        }
-    }
-}
-```
-
-### 10.2. Webhook com Slack ou Discord para Notificações (Já Abordado)
-Você já implementou isso no stage Notificar no Slack. O código abaixo usa o resultado do Trivy:
-
-Substitua o stage Notificar no Slack existente:
-
-```bash
-stage('Notificar no Slack') {
-    steps {
-        withCredentials([string(credentialsId: 'slack-credentials', variable: 'SLACK_WEBHOOK')]) {
-            script {
-                def slackMessage = ""
-
-                if (env.CRITICAL_VULNERABILITIES_FOUND == "true") {
-                    slackMessage = "⚠️ Pipeline FINALIZADA com AVISOS de SEGURANÇA para a build ${env.BUILD_ID} na branch ${env.BRANCH_NAME ?: 'main'}!\nForam encontradas vulnerabilidades HIGH/CRITICAL na imagem Docker. Analise o log do Jenkins para mais detalhes: ${env.BUILD_URL}"
-                } else if (env.CRITICAL_VULNERABILITIES_FOUND == "false") {
-                    slackMessage = "✅ Pipeline FINALIZADA com SUCESSO para a build ${env.BUILD_ID} na branch ${env.BRANCH_NAME ?: 'main'}!\nSem vulnerabilidades HIGH/CRITICAL detectadas. Aplicação implantada no Kubernetes: ${env.BUILD_URL}"
-                } else {
-                    slackMessage = "❌ Pipeline FINALIZADA com ERRO no SCAN de SEGURANÇA para a build ${env.BUILD_ID} na branch ${env.BRANCH_NAME ?: 'main'}!\nErro ao executar o Trivy. Analise o log do Jenkins: ${env.BUILD_URL}"
-                }
-
-                sh """
-                    curl -X POST -H 'Content-type: application/json' \
-                    --data '{"text":"${slackMessage}"}' \
-                    "${SLACK_WEBHOOK}"
-                """
-            }
-        }
-    }
-}
-```
-
-## 1️⃣1️⃣ Teste Final da Aplicação
-
-Acesse a aplicação no navegador via:  
-[http://localhost:<NodePort_alocada_pelo_K8s>](http://localhost:<NodePort_alocada_pelo_K8s>)  
-Exemplo: [http://localhost:30001](http://localhost:30001)
-
-### Verificações:
-
-- ✅ Verifique a funcionalidade dos endpoints do **FastAPI**:
-  - `/color`
-  - `/cat`
-  - *outros endpoints disponíveis*
-
-- ✅ Confirme se o **frontend** está sendo servido corretamente.
-
-![IMG](https://github.com/ManaraMarcelo/Projeto-Pipeline/blob/main/Imgs/inicial.png)
-...
-![IMG](https://github.com/ManaraMarcelo/Projeto-Pipeline/blob/main/Imgs/gato.png)
-
-- ✅ Observe as **notificações no Slack**.
-
-![notificacao](https://github.com/ManaraMarcelo/Projeto-Pipeline/blob/main/Imgs/notify.png)
----
-
-## ✅ Conclusão
-
-Este projeto demonstra uma **pipeline de CI/CD robusta e automatizada** para aplicações conteinerizadas.  
-Ele cobre desde o desenvolvimento do código até a implantação em **Kubernetes**, integrando ferramentas essenciais do ecossistema **DevOps**.
-
-O fluxo automatizado garante entregas:
-
-- 🔁 **Mais rápidas**
-- ✅ **Confiáveis**
-- 📈 **Com maior qualidade**
-
-> 🛡️ **Minimizando erros manuais.**
-
----
-
-## 🔗 Contato
-
-📧 **Email:** [zmarcelo2018@gmail.com](mailto:zmarcelo2018@gmail.com)  
-💡 *Sugestões e melhorias são sempre bem-vindas!*
